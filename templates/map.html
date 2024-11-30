@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload History Map</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"></script>
+    <style>
+        #map {
+            height: 600px;
+        }
+        .back-button {
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="text-center">
+        <h1>Upload History Map</h1>
+        <!-- Go Back Button -->
+        <div class="back-button">
+            <a href="/" class="btn btn-primary">Go Back</a>
+        </div>
+    </div>
+    <div id="map"></div>
+    <script>
+        // Initialize the map
+        const map = L.map('map').setView([0, 0], 2); // Default view set to the world
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Upload history passed from Flask
+        const uploadHistory = {{ upload_history|tojson }};
+
+        // Define bounds for map to focus on markers
+        const bounds = [];
+
+        // Add markers for each upload
+        uploadHistory.forEach(upload => {
+            if (upload.latitude && upload.longitude) {
+                const marker = L.marker([upload.latitude, upload.longitude]).addTo(map);
+
+                // Bind popup with upload details
+                marker.bindPopup(`
+                    <strong>Total Trash:</strong> ${upload.response}<br>
+                    <strong>Location:</strong> ${upload.location}<br>
+                    <strong>Time:</strong> ${upload.timestamp}
+                `);
+
+                // Add marker coordinates to bounds
+                bounds.push([upload.latitude, upload.longitude]);
+            }
+        });
+
+        // Adjust map view to fit all markers
+        if (bounds.length > 0) {
+            map.fitBounds(bounds);
+        }
+    </script>
+</body>
+</html>
